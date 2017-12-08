@@ -2,6 +2,11 @@
 
 This file is used to list changes made in each version of visualstudion.
 
+## 1.2.1
+
+* VisualSutdio 2017 now installs cleanly from a web download.
+* TODO: Migrate to `dsc_resources` for installs.
+
 ## 1.2.0
 
 * Default to VS 2015 Community Edition

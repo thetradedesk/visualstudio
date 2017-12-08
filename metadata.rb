@@ -1,5 +1,3 @@
-
-
 name             'visualstudio'
 maintainer       'Shawn Neal'
 maintainer_email 'sneal@sneal.net'
@@ -7,6 +5,7 @@ source_url       'https://github.com/windowschefcookbooks/visualstudio'
 issues_url       'https://github.com/windowschefcookbooks/visualstudio/issues'
 license          'Apache 2.0'
 description      'Installs/Configures Visual Studio'
-version          '1.2.0'
-depends          'windows'
+version          '1.2.1'
+
 depends          'seven_zip'
+depends          'windows'
