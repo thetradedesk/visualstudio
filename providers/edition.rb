@@ -40,17 +40,16 @@ action :install do
         path extracted_iso_dir
         source new_resource.source
         overwrite true
-        checksum new_resource.checksum
-        only_if { new_resource.source != nil and extractable_download }
+        checksum new_resource.checksum unless new_resource.checksum.nil?
+        only_if { (!new_resource.source.nil?) and extractable_download }
       end
 
       # Not an ISO but the web install
       remote_file "download__#{new_resource.version}_#{new_resource.edition}" do
         path installer_exe
-        source new_resource.source
-        overwrite true
-        checksum new_resource.checksum
-        only_if { new_resource.source != nil and !extractable_download }
+        source lazy { new_resource.source }
+        checksum new_resource.checksum if new_resource.checksum.nil?
+        only_if { (!new_resource.source.nil?) and (!extractable_download) }
       end
 
       # Ensure the target directory exists so logging doesn't fail on VS 2010
@@ -72,7 +71,7 @@ action :install do
         path extracted_iso_dir
         action :delete
         recursive true
-        only_if { new_resource.source != nil and !new_resource.preserve_extracted_files }
+        only_if { (!new_resource.source.nil?) and (!new_resource.preserve_extracted_files) }
       end
     end
     new_resource.updated_by_last_action(true)
@@ -80,12 +79,14 @@ action :install do
 end
 
 def extractable_download
-  ::File.extname(new_resource.source).downcase == '.iso' or ::File.extname(new_resource.source).downcase == '.zip' ::File.extname(new_resource.source).downcase == '.7z')
+  %w( '.iso' '.zip' '.7z').include? ::File.extname(new_resource.source).downcase
 end
 
 def prepare_vs_options
   config_path = create_vs_admin_deployment_file
-  setup_options = "/Q /norestart /noweb /log \"#{install_log_file}\" /adminfile \"#{config_path}\""
+#  setup_options = "/Q /norestart /noweb /log \"#{install_log_file}\" /adminfile \"#{config_path}\""
+
+  setup_options = "/Q /norestart /log \"#{install_log_file}\" /adminfile \"#{config_path}\""
   if new_resource.product_key
     product_key = new_resource.product_key.delete('-')
     setup_options << " /productkey \"#{product_key}\""
@@ -135,23 +136,28 @@ def create_vs2010_unattend_file
 end
 
 def prepare_vs2017_options
-  # Merge the VS version and edition default AdminDeploymentFile.xml item's with customized install_items
-  install_items = deep_merge(node['visualstudio'][new_resource.version.to_s][new_resource.edition.to_s]['default_install_items'], Mash.new)
-  workloads_and_components_to_install = ''
+  option_all = node['visualstudio'][new_resource.version.to_s]['all']
+  option_allWorkloads = node['visualstudio'][new_resource.version.to_s]['allWorkloads']
+  option_includeRecommended = node['visualstudio'][new_resource.version.to_s]['includeRecommended']
+  option_include_optional = node['visualstudio'][new_resource.version.to_s]['includeOptional']
+  options_components_to_install = ''
 
-  install_items.each do |key, attributes|
+  # Merge the VS version and edition default AdminDeploymentFile.xml item's with customized install_items  
+  node['visualstudio'][new_resource.version.to_s][new_resource.edition.to_s]['default_install_items'].each do |key, attributes|
     if attributes.has_key?('selected')
-      should_install = attributes['selected'] ? 'yes' : 'no'
-      if (should_install)
-          workloads_and_components_to_install << " --add #{key}"
+      if (attributes['selected'])
+          options_components_to_install << " --add #{key}"
       end
     end
   end
-  workloads_and_components_to_install = ' --all' if workloads_and_components_to_install.blank?
 
-  setup_options = '--norestart --quiet --wait'
-  setup_options << " --installPath \"#{new_resource.install_dir}\"" unless new_resource.install_dir.blank?
-  setup_options << workloads_and_components_to_install
+  setup_options = '--norestart --passive --wait'
+  setup_options << " --installPath \"#{new_resource.install_dir}\"" unless new_resource.install_dir.empty?
+  setup_options << " --all" if option_all
+  setup_options << " --allWorkloads" if option_allWorkloads
+  setup_options << " --includeRecommended" if option_includeRecommended
+  setup_options << " --includeOptional" if option_include_optional
+  setup_options << options_components_to_install unless options_components_to_install.empty?
 
   setup_options
 end
@@ -174,7 +180,8 @@ end
 
 def installer_exe
   installer = new_resource.installer_file || "vs_#{new_resource.edition}.exe"
-  ::File.join(extracted_iso_dir, installer)
+  installer = ::File.join(extracted_iso_dir, installer) unless new_resource.source.nil?
+  installer
 end
 
 def extracted_iso_dir
@@ -184,5 +191,9 @@ def extracted_iso_dir
     new_resource.edition
   )
   extract_dir = node['visualstudio']['unpack_dir'].nil? ? default_path : node['visualstudio']['unpack_dir']
+  directory extract_dir do
+    action :create
+    recursive true
+  end
   win_friendly_path(extract_dir)
 end

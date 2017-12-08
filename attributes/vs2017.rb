@@ -21,6 +21,10 @@
 
 # Currently you cannot change this, doing so will break the cookbook
 default['visualstudio']['2017']['install_dir'] = (ENV['ProgramFiles(x86)'] || 'C:\Program Files (x86)') + '\Microsoft Visual Studio 16.0'
+default['visualstudio']['2017']['all'] = false
+default['visualstudio']['2017']['allWorkloads'] = false
+default['visualstudio']['2017']['includeRecommended'] = true
+default['visualstudio']['2017']['includeOptional'] = false
 
 # Test Professional w/Update1 https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-test-professional
 default['visualstudio']['2017']['testprofessional']['installer_file'] = 'vs_testprofessional.exe'
@@ -78,7 +82,7 @@ default['visualstudio']['2017']['community']['default_source'] = 'https://www.vi
 default['visualstudio']['2017']['community']['default_install_items'].tap do |h|
     h['Microsoft.VisualStudio.Workload.CoreEditor']['selected'] = true
     h['Microsoft.VisualStudio.Workload.Azure']['selected'] = true
-    h['Microsoft.VisualStudio.Workload.Data']['selected'] = true
+    h['Microsoft.VisualStudio.Workload.DataScience']['selected'] = true
     h['Microsoft.VisualStudio.Workload.ManagedDesktop']['selected'] = true
     h['Microsoft.VisualStudio.Workload.ManagedGame']['selected'] = true
     h['Microsoft.VisualStudio.Workload.NativeCrossPlat']['selected'] = true
@@ -90,6 +94,7 @@ default['visualstudio']['2017']['community']['default_install_items'].tap do |h|
     h['Microsoft.VisualStudio.Workload.NetWeb']['selected'] = true
     h['Microsoft.VisualStudio.Workload.Node']['selected'] = true
     h['Microsoft.VisualStudio.Workload.Office']['selected'] = true
+    h['Microsoft.VisualStudio.Workload.Python']['selected'] = true
     h['Microsoft.VisualStudio.Workload.Universal']['selected'] = true
     h['Microsoft.VisualStudio.Workload.VisualStudioExtension']['selected'] = true
     h['Microsoft.VisualStudio.Workload.WebCrossPlat']['selected'] = true
