@@ -5,7 +5,7 @@
     <% if @edition == "enterprise" %>
   <BundleCustomizations TargetDir="default" NoCacheOnlyMode="default" NoWeb="yes" NoRefresh="yes" Feed="default" />
     <% else %>
-  <BundleCustomizations TargetDir="C:\Program Files (x86)\Microsoft Visual Studio 14.0" NoCacheOnlyMode="default" NoWeb="yes" NoRefresh="default" SuppressRefreshPrompt="default" Feed="default" />
+  <BundleCustomizations TargetDir="C:\Program Files (x86)\Microsoft Visual Studio 14.0" NoCacheOnlyMode="default" NoWeb="default" NoRefresh="default" SuppressRefreshPrompt="default" Feed="default" />
     <% end %>
   <% when "2013", "2012"  %>
 <AdminDeploymentCustomizations xmlns="http://schemas.microsoft.com/wix/2011/AdminDeployment">

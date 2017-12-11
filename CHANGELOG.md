@@ -2,6 +2,10 @@
 
 This file is used to list changes made in each version of visualstudion.
 
+## 1.2.2
+
+* Make the installers download components from the web when needed
+
 ## 1.2.1
 
 * VisualSutdio 2017 now installs cleanly from a web download.
