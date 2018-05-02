@@ -2,6 +2,10 @@
 
 This file is used to list changes made in each version of visualstudion.
 
+## 1.2.3
+
+* Remove Chef::shell_out as it was deprecated replaced with mixin
+
 ## 1.2.2
 
 * Make the installers download components from the web when needed
