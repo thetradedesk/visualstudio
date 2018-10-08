@@ -2,6 +2,10 @@
 
 This file is used to list changes made in each version of visualstudion.
 
+## 1.2.4
+
+* Allow for overriding install dir on a per-edition basis
+
 ## 1.2.3
 
 * Remove Chef::shell_out as it was deprecated replaced with mixin
@@ -45,7 +49,7 @@ This file is used to list changes made in each version of visualstudion.
 
 * Initial release to Chef SuperMarket
 
-- - - 
+- - -
 Check the [Markdown Syntax Guide](http://daringfireball.net/projects/markdown/syntax) for help with Markdown.
 
 The [Github Flavored Markdown page](http://github.github.com/github-flavored-markdown/) describes the differences between markdown on github and standard markdown.

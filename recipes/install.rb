@@ -26,10 +26,13 @@ installs.each do |install|
   version = install['version']
   edition = install['edition']
   url = source_download_url(version, edition)
+  # allow to override the install dir on a per-edition basis
+  install_directory = node['visualstudio'][version][edition]['install_dir'] || node['visualstudio'][version]['install_dir'] # rubocop:disable Metrics/LineLength
+
   visualstudio_edition "visualstudio_#{version}_#{edition}" do
     edition edition
     version version
-    install_dir node['visualstudio'][version]['install_dir']
+    install_dir install_directory
     source url
     product_key node['visualstudio'][version][edition]['product_key']
     package_name node['visualstudio'][version][edition]['package_name']
