@@ -5,7 +5,7 @@ source_url       'https://github.com/windowschefcookbooks/visualstudio'
 issues_url       'https://github.com/windowschefcookbooks/visualstudio/issues'
 license          'Apache 2.0'
 description      'Installs/Configures Visual Studio'
-version          '1.2.3'
+version          '1.2.4'
 
 depends          'seven_zip'
 depends          'windows'
