@@ -33,7 +33,7 @@ end
 use_inline_resources
 
 action :install do
-  unless package_is_installed?(new_resource.package_name)
+  unless package_is_installed?(new_resource.package_name) and all_components_installed?
     converge_by("Installing VisualStudio #{new_resource.edition} #{new_resource.version}") do
       # Extract the ISO image to the temporary Chef cache dir
       seven_zip_archive "extract_#{new_resource.version}_#{new_resource.edition}_iso" do
@@ -135,6 +135,29 @@ def create_vs2010_unattend_file
   config_path
 end
 
+def all_components_installed?
+  (requested_components - loaded_componnets).none?
+end
+
+def loaded_componnets
+  devenv_ini_path = ::File.join(new_resource.install_dir, 'Common7/IDE/devenv.isolation.ini')
+  return [] unless ::File.exists(devenv_ini_path)
+
+  packages = ::File.readlines(devenv_ini_path)
+                   .find_all { |x| x.start_with?('InstallationPackages', 'InstallationWorkloads') }
+                   .map { |x| x.split('=').last.strip.split(',') }
+                   .flatten
+  packages
+end
+
+def requested_components
+  components = []
+  node['visualstudio'][new_resource.version.to_s][new_resource.edition.to_s]['default_install_items'].each do |key, attributes|
+    components << key if attributes.has_key?('selected') and attributes['selected']
+  end
+  components
+end
+
 def prepare_vs2017_options
   option_all = node['visualstudio'][new_resource.version.to_s]['all']
   option_allWorkloads = node['visualstudio'][new_resource.version.to_s]['allWorkloads']
@@ -142,13 +165,9 @@ def prepare_vs2017_options
   option_include_optional = node['visualstudio'][new_resource.version.to_s]['includeOptional']
   options_components_to_install = ''
 
-  # Merge the VS version and edition default AdminDeploymentFile.xml item's with customized install_items  
-  node['visualstudio'][new_resource.version.to_s][new_resource.edition.to_s]['default_install_items'].each do |key, attributes|
-    if attributes.has_key?('selected')
-      if (attributes['selected'])
-          options_components_to_install << " --add #{key}"
-      end
-    end
+  # Merge the VS version and edition default AdminDeploymentFile.xml item's with customized install_items
+  requested_components.each do |key|
+    options_components_to_install << " --add #{key}"
   end
 
   setup_options = '--norestart --passive --wait'
