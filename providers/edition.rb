@@ -58,7 +58,7 @@ action :install do
         recursive true
       end
       
-      windows_package new_resource.package_name do
+      windows_package "Visual Studio - #{new_resource.package_name}" do
         source installer_exe
         installer_type :custom
         options visual_studio_options
@@ -141,7 +141,7 @@ end
 
 def loaded_componnets
   devenv_ini_path = ::File.join(new_resource.install_dir, 'Common7/IDE/devenv.isolation.ini')
-  return [] unless ::File.exists(devenv_ini_path)
+  return [] unless ::File.exists?(devenv_ini_path)
 
   packages = ::File.readlines(devenv_ini_path)
                    .find_all { |x| x.start_with?('InstallationPackages', 'InstallationWorkloads') }
