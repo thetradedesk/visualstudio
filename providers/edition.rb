@@ -33,8 +33,12 @@ end
 use_inline_resources
 
 action :install do
-  unless package_is_installed?(new_resource.package_name) and all_components_installed?
-    converge_by("Installing VisualStudio #{new_resource.edition} #{new_resource.version}") do
+  package_is_installed = package_is_installed?(new_resource.package_name)
+  all_components_installed = missing_components.none?
+  unless package_is_installed and all_components_installed
+    message = "Installing VisualStudio #{new_resource.edition} #{new_resource.version}"
+    message = "Adding additional components to VisualStudio #{new_resource.edition} #{new_resource.version}" if package_is_installed
+    converge_by(message) do
       # Extract the ISO image to the temporary Chef cache dir
       seven_zip_archive "extract_#{new_resource.version}_#{new_resource.edition}_iso" do
         path extracted_iso_dir
@@ -57,7 +61,15 @@ action :install do
         path new_resource.install_dir
         recursive true
       end
-      
+
+      if package_is_installed
+        log 'missing_components' do
+          message "Adding the following missing components to visual studio:\n    #{missing_components.join("\n    ")}"
+          level :warn
+        end
+      end
+
+
       windows_package "Visual Studio - #{new_resource.package_name}" do
         source installer_exe
         installer_type :custom
@@ -135,22 +147,30 @@ def create_vs2010_unattend_file
   config_path
 end
 
-def all_components_installed?
-  (requested_components - loaded_componnets).none?
+def missing_components
+  (requested_components - loaded_componnets)
 end
 
-def loaded_componnets
+def loaded_components
+  @loaded_components ||= get_loaded_components
+end
+
+def get_loaded_components
   devenv_ini_path = ::File.join(new_resource.install_dir, 'Common7/IDE/devenv.isolation.ini')
   return [] unless ::File.exists?(devenv_ini_path)
 
   packages = ::File.readlines(devenv_ini_path)
-                   .find_all { |x| x.start_with?('InstallationPackages', 'InstallationWorkloads') }
-                   .map { |x| x.split('=').last.strip.split(',') }
-                   .flatten
+                 .find_all { |x| x.start_with?('InstallationPackages', 'InstallationWorkloads') }
+                 .map { |x| x.split('=').last.strip.split(',') }
+                 .flatten
   packages
 end
 
 def requested_components
+  @requested_components ||= get_requested_components
+end
+
+def get_requested_components
   components = []
   node['visualstudio'][new_resource.version.to_s][new_resource.edition.to_s]['default_install_items'].each do |key, attributes|
     components << key if attributes.has_key?('selected') and attributes['selected']
