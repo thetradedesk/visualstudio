@@ -108,7 +108,7 @@ end
 
 # rubocop:disable Metrics/LineLength, Metrics/MethodLength, Metrics/AbcSize
 def create_vs_admin_deployment_file
-  config_path = win_friendly_path(::File.join(extracted_iso_dir, 'AdminDeployment.xml'))
+  config_path = Chef::Util::PathHelper.cleanpath(::File.join(extracted_iso_dir, 'AdminDeployment.xml'))
 
   # Merge the VS version and edition default AdminDeploymentFile.xml item's with customized install_items
   install_items = deep_merge(node['visualstudio'][new_resource.version.to_s][new_resource.edition.to_s]['default_install_items'], Mash.new)
@@ -134,7 +134,7 @@ def prepare_vs2010_options
 end
 
 def create_vs2010_unattend_file
-  config_path = win_friendly_path(::File.join(extracted_iso_dir, new_resource.configure_basename))
+  config_path = Chef::Util::PathHelper.cleanpath(::File.join(extracted_iso_dir, new_resource.configure_basename))
 
   template "#{config_path}.tmp" do
     source "#{new_resource.configure_basename}.erb"
@@ -210,7 +210,7 @@ def utf8_to_unicode(file_path)
 end
 
 def install_log_file
-  win_friendly_path(::File.join(new_resource.install_dir, 'vsinstall.log'))
+  Chef::Util::PathHelper.cleanpath(::File.join(new_resource.install_dir, 'vsinstall.log'))
 end
 
 def visual_studio_options
@@ -234,5 +234,5 @@ def extracted_iso_dir
     action :create
     recursive true
   end
-  win_friendly_path(extract_dir)
+  Chef::Util::PathHelper.cleanpath(extract_dir)
 end

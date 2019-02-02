@@ -68,11 +68,11 @@ def extracted_iso_dir
     Digest::MD5.hexdigest(new_resource.package_name)
   )
   extract_dir = node['visualstudio']['unpack_dir'].nil? ? default_path : node['visualstudio']['unpack_dir']
-  win_friendly_path(extract_dir)
+  Chef::Util::PathHelper.cleanpath(extract_dir)
 end
 
 def install_log_file
-  win_friendly_path(::File.join(new_resource.install_dir, 'vsinstallupdate.log'))
+  Chef::Util::PathHelper.cleanpath(::File.join(new_resource.install_dir, 'vsinstallupdate.log'))
 end
 
 # only base file name of source, e.g. VS2013.5
