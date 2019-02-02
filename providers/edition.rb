@@ -148,7 +148,7 @@ def create_vs2010_unattend_file
 end
 
 def missing_components
-  (requested_components - loaded_componnets)
+  (requested_components - loaded_components)
 end
 
 def loaded_components
@@ -186,11 +186,15 @@ def prepare_vs2017_options
   options_components_to_install = ''
 
   # Merge the VS version and edition default AdminDeploymentFile.xml item's with customized install_items
-  (requested_components+loaded_componnets).uniq.each do |key|
+  components = missing_components
+  components = requested_components unless components.any?
+  components.each do |key|
     options_components_to_install << " --add #{key}"
   end
 
-  setup_options = '--norestart --passive --wait'
+  setup_options = ""
+  setup_options << 'update' if package_is_installed?(new_resource.package_name)
+  setup_options << ' --norestart --passive --wait'
   setup_options << " --installPath \"#{new_resource.install_dir}\"" unless new_resource.install_dir.empty?
   setup_options << " --all" if option_all
   setup_options << " --allWorkloads" if option_allWorkloads
