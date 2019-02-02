@@ -166,7 +166,7 @@ def prepare_vs2017_options
   options_components_to_install = ''
 
   # Merge the VS version and edition default AdminDeploymentFile.xml item's with customized install_items
-  requested_components.each do |key|
+  (requested_components+loaded_componnets).uniq.each do |key|
     options_components_to_install << " --add #{key}"
   end
 
