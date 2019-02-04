@@ -36,22 +36,8 @@ action :install do
 
   if should_install?
     converge_by(converge_message) do
-      # Extract the ISO image to the temporary Chef cache dir
-      seven_zip_archive "extract_#{new_resource.version}_#{new_resource.edition}_iso" do
-        path extracted_iso_dir
-        source new_resource.source
-        overwrite true
-        checksum new_resource.checksum unless new_resource.checksum.nil?
-        only_if { (!new_resource.source.nil?) and extractable_download }
-      end
-
-      # Not an ISO but the web install
-      remote_file "download__#{new_resource.version}_#{new_resource.edition}" do
-        path installer_exe
-        source lazy { new_resource.source }
-        checksum new_resource.checksum if new_resource.checksum.nil?
-        only_if { (!new_resource.source.nil?) and (!extractable_download) }
-      end
+      download_iso_source if iso_source?
+      download_exe_source if exe_source?
 
       # Ensure the target directory exists so logging doesn't fail on VS 2010
       directory "create_#{new_resource.install_dir}" do
@@ -59,23 +45,100 @@ action :install do
         recursive true
       end
 
-      windows_package "Visual Studio - #{new_resource.package_name}" do
-        source installer_exe
-        installer_type :custom
-        options visual_studio_options
-        timeout 3600 # 1hour
-        returns [0, 127, 3010]
+      vs_opts = visual_studio_options
+
+      converge_by("Running Visual Studio installer with the following arguments...\n #{vs_opts}") do
+        windows_package "Visual Studio - #{new_resource.package_name}" do
+          source installer_exe
+          installer_type :custom
+          options vs_opts
+          timeout 3600 # 1hour
+          returns [0, 127, 3010]
+        end
       end
 
-      # Cleanup extracted ISO files from tmp dir
-      directory "remove_#{new_resource.version}_#{new_resource.edition}_dir" do
-        path extracted_iso_dir
-        action :delete
-        recursive true
-        only_if { (!new_resource.source.nil?) and (!new_resource.preserve_extracted_files) }
-      end
+      cleanup_iso_dir if iso_source?
     end
     new_resource.updated_by_last_action(true)
+  end
+end
+
+def iso_source?
+  !new_resource.source.nil? && extractable_download
+end
+
+def exe_source?
+  !new_resource.source.nil? && !extractable_download
+end
+
+def download_iso_source
+  # Not an ISO but the web install
+  local_path = ::File.join(cache_path, ::File.basename(new_resource.source))
+  remote_file "download__#{new_resource.version}_#{new_resource.edition}_iso" do
+    path local_path
+    source new_resource.source
+    checksum new_resource.checksum if new_resource.checksum.nil?
+  end
+
+  # Extract the ISO image to the temporary Chef cache dir
+  seven_zip_archive "extract_#{new_resource.version}_#{new_resource.edition}_iso" do
+    path extracted_iso_dir
+    source local_path
+    overwrite true
+  end
+end
+
+def cleanup_iso_dir
+  # Cleanup extracted ISO files from tmp dir
+  directory "remove_#{new_resource.version}_#{new_resource.edition}_dir" do
+    path extracted_iso_dir
+    action :delete
+    recursive true
+    only_if { !new_resource.preserve_extracted_files }
+  end
+end
+
+def download_exe_source
+  # Not an ISO but the web install
+  remote_file "download__#{new_resource.version}_#{new_resource.edition}" do
+    path installer_exe
+    source lazy { new_resource.source }
+    checksum new_resource.checksum if new_resource.checksum.nil?
+  end
+end
+
+
+def installer_exe
+  @installer ||= begin
+    installer = new_resource.installer_file || "vs_#{new_resource.edition}.exe"
+    installer = ::File.join(extracted_iso_dir, installer) if iso_source?
+    installer = ::File.join(cache_path, installer) if exe_source?
+    installer
+  end
+end
+
+def cache_path
+  @package_cache_dir ||= Chef::FileCache.create_cache_path(::File.join('package/',
+                                                                       'visualstudio',
+                                                                       new_resource.version,
+                                                                       new_resource.edition)
+                                                          )
+end
+
+def extracted_iso_dir
+  @extract_dir ||= begin
+    default_path = ::File.join(
+        Chef::Config[:file_cache_path],
+        'visualstudio',
+        new_resource.version,
+        new_resource.edition
+    )
+    extract_dir = node['visualstudio']['unpack_dir'].nil? ? default_path : node['visualstudio']['unpack_dir']
+    directory extract_dir do
+      action :create
+      recursive true
+    end
+    Chef::Util::PathHelper.cleanpath(extract_dir)
   end
 end
 
@@ -85,6 +148,7 @@ def converge_message
             else 'Installing ' end
   message << "VisualStudio #{new_resource.edition} #{new_resource.version}."
   message << " Adding additional components (#{missing_components.join(', ')})" if missing_components.any?
+  message
 end
 
 def should_install?
@@ -126,7 +190,7 @@ def requested_components
   @requested_components ||= begin
     components = []
     node['visualstudio'][new_resource.version.to_s][new_resource.edition.to_s]['default_install_items'].each do |key, attributes|
-      components << key if attributes.has_key?('selected') and attributes['selected']
+      components << key if attributes.has_key?('selected') && attributes['selected']
     end
     components
   end
@@ -157,36 +221,4 @@ def visual_studio_options
   setup_options << options_components_to_install unless options_components_to_install.empty?
 
   setup_options
-end
-
-def utf8_to_unicode(file_path)
-  powershell_script "convert #{file_path} to unicode" do
-    code(
-      "gc -en utf8 #{file_path}.tmp | Out-File -en unicode #{file_path}"
-    )
-  end
-end
-
-def install_log_file
-  Chef::Util::PathHelper.cleanpath(::File.join(new_resource.install_dir, 'vsinstall.log'))
-end
-
-def installer_exe
-  installer = new_resource.installer_file || "vs_#{new_resource.edition}.exe"
-  installer = ::File.join(extracted_iso_dir, installer) unless new_resource.source.nil?
-  installer
-end
-
-def extracted_iso_dir
-  default_path = ::File.join(
-    Chef::Config[:file_cache_path],
-    new_resource.version,
-    new_resource.edition
-  )
-  extract_dir = node['visualstudio']['unpack_dir'].nil? ? default_path : node['visualstudio']['unpack_dir']
-  directory extract_dir do
-    action :create
-    recursive true
-  end
-  Chef::Util::PathHelper.cleanpath(extract_dir)
 end
