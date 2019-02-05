@@ -35,13 +35,11 @@ use_inline_resources
 action :install do
   check_for_dotnet
   unless installed?
-    converge_by(install_converge_message) do
-      setup_installer_files
+    setup_installer_files
 
-      run_vs_installer(:install)
+    run_vs_installer(:install)
 
-      cleanup_iso_dir if iso_source?
-    end
+    cleanup_iso_dir if iso_source?
     new_resource.updated_by_last_action(true)
   end
 end
@@ -49,15 +47,13 @@ end
 action :update do
   check_for_dotnet
   if should_update?
-    converge_by(update_converge_message) do
-      setup_installer_files
+    setup_installer_files
 
-      update_vs_installer
+    update_vs_installer
 
-      run_vs_installer(:update)
+    run_vs_installer(:update)
 
-      cleanup_iso_dir if iso_source?
-    end
+    cleanup_iso_dir if iso_source?
     new_resource.updated_by_last_action(true)
   end
 end
@@ -65,13 +61,11 @@ end
 action :modify do
   check_for_dotnet
   if should_modify?
-    converge_by(modify_converge_message) do
-      setup_installer_files
+    setup_installer_files
 
-      run_vs_installer(:modify)
+    run_vs_installer(:modify)
 
-      cleanup_iso_dir if iso_source?
-    end
+    cleanup_iso_dir if iso_source?
     new_resource.updated_by_last_action(true)
   end
 end
@@ -191,20 +185,6 @@ def extracted_iso_dir
     end
     Chef::Util::PathHelper.cleanpath(extract_dir)
   end
-end
-
-def install_converge_message
-  "Installing VisualStudio #{new_resource.edition} #{new_resource.version}."
-end
-
-def update_converge_message
-  "Updating VisualStudio #{new_resource.edition} #{new_resource.version}."
-end
-
-def modify_converge_message
-  message = "Modifying VisualStudio #{new_resource.edition} #{new_resource.version}."
-  message << " Adding additional components (#{missing_components.join(', ')})" if missing_components.any?
-  message
 end
 
 def should_update?
