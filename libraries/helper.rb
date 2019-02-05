@@ -35,6 +35,10 @@ module Visualstudio
       url
     end
 
+    def install_directory(version, edition)
+      node['visualstudio'][version][edition]['install_dir'] || node['visualstudio'][version]['install_dir'] # rubocop:disable Metrics/LineLength
+    end
+
     private
 
     # Gets the version/edition ISO download root URL

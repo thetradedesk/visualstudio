@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 
-actions :install
+actions :install, :update, :modify
 default_action :install
 
 # The VS edition: professional etc
@@ -49,5 +49,3 @@ attribute :preserve_extracted_files, kind_of: [TrueClass, FalseClass], default: 
 # The installer filename specific to the edition, defaults to vs_<edition>.exe
 attribute :installer_file, kind_of: String, required: false
 
-# VS 2010 ini path, unused for 2013+
-attribute :configure_basename, kind_of: String, default: nil

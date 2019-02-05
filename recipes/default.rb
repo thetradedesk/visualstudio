@@ -18,13 +18,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-# VS installation requires .NET to be installed first
-include_recipe 'visualstudio::dotnet_prereq'
-
-# We require 7-zip in order to extract the ISOs
-include_recipe 'seven_zip'
-
 # Enable/disable Nuget package restore
 include_recipe 'visualstudio::nuget'
 
