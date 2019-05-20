@@ -2,6 +2,10 @@
 
 This file is used to list changes made in each version of visualstudion.
 
+## 1.2.5
+
+* VisualStudio 2019 now installs cleanly from a web download.
+
 ## 1.2.4
 
 * Allow for overriding install dir on a per-edition basis

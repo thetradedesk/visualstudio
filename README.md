@@ -2,14 +2,14 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/ttumjhmmxjo5j7gv/branch/master?svg=true)](https://ci.appveyor.com/project/ChefWindowsCookbooks65871/visualstudio/branch/master)
 
 # VisualStudio Cookbook
-This Chef cookbook installs Visual Studio 2010, 2012, 2013, 2015, 2017 from an ISO or folder/network location.
+This Chef cookbook installs Visual Studio 2010, 2012, 2013, 2015, 2017, 2019 from an ISO or folder/network location.
 
 # Requirements
 
 This cookbook assumes the appropriate version of the .NET framework has already been installed before running the VisualStudio cookbook. To install .NET you can use the [dotnetframework cookbook](https://supermarket.chef.io/cookbooks/dotnetframework). You must reboot the system after the .NET installation and before the VisualStudio installation.
 
 - VisualStudio 2010, 2012, and 2013 require .NET 4.5.x.
-- VisualStudio 2015, 2017 requires .NET 4.6.
+- VisualStudio 2015, 2017, 2019 requires .NET 4.6.
 
 This cookbook requires 7-zip to be installed so it can extract the ISO. To ensure this happens this cookbook includes the [seven_zip](https://supermarket.chef.io/cookbooks/seven_zip) default recipe.
 
@@ -34,6 +34,10 @@ NOTE - This cookbook cannot be installed over naked WinRM, i.e. knife-winrm with
 - 2017 Professional
 - 2017 Test Professional
 - 2017 Community
+- 2019 Enterprise
+- 2019 Professional
+- 2019 Team Explorer
+- 2019 Community
 
 ## Supported OSs
 - Windows 7
@@ -91,7 +95,7 @@ If you _really_ want to install VS 2015 on Windows Server 2012R2 over naked WinR
   <tr>
     <td><code>['visualstudio']['version']</code></td>
     <td>Integer</td>
-    <td>The VisualStudio version to install, i.e. 2010, 2012, 2013, 2015, 2017.</td>
+    <td>The VisualStudio version to install, i.e. 2010, 2012, 2013, 2015, 2017, 2019.</td>
     <td><code>2015</code></td>
   </tr>
   <tr>
@@ -122,7 +126,7 @@ If you _really_ want to install VS 2015 on Windows Server 2012R2 over naked WinR
 
 # Usage
 
-Add `'visualstudio::default'` to your runlist. This will install VS 2015 Community Edition from the publicly available ISO. If you'd like to install another edition set the 'edition' attribute to: 'community', 'professional', 'premium', or 'testprofessional'. If you'd like to install a different version set the 'version' attribute to: '2010', '2012', '2013', '2015', '2017'.
+Add `'visualstudio::default'` to your runlist. This will install VS 2015 Community Edition from the publicly available ISO. If you'd like to install another edition set the 'edition' attribute to: 'community', 'professional', 'premium', or 'testprofessional'. If you'd like to install a different version set the 'version' attribute to: '2010', '2012', '2013', '2015', '2017', '2019'.
 
 If you need to install multiple different versions/editions of VisualStudio on the same node you must instead set the 'installs' attribute. If the installs attribute is set then the version and edition attributes are ignored.
 
@@ -146,7 +150,7 @@ node.override['visualstudio']['2013']['professional']['source'] = 'https://myart
 
 VisualStudio 2013 and newer have default public download links for all their ISOs. If you're using an older version (2010, 2012) you must first set a download source. Either set the global `node['visualstudio']['source']` download URL or the version/edition specific download source, e.g. `node['visualstudio']['2012']['professional']['source']`. You can also use these same attributes to override the ISO location for newer VS versions.
 
-VisualStudio 2017 does not have an ISO installer. You have to use web installer. For faster installs you can cache the Visual Studio installation files on a network share using the offline install cache.
+VisualStudio 2017 and 2019 do not have ISO installers. You have to use web installers. For faster installs you can cache the Visual Studio installation files on a network share using the offline install cache.
 
 To run an installation from a network share, set the following:
 
