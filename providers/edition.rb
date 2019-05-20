@@ -149,7 +149,7 @@ def download_exe_source
   remote_file "download__#{new_resource.version}_#{new_resource.edition}" do
     path installer_exe
     source lazy { new_resource.source }
-    checksum new_resource.checksum if new_resource.checksum.nil?
+    checksum new_resource.checksum unless new_resource.checksum.nil?
   end
 end
 
